@@ -1,36 +1,29 @@
-from src.data_loader import load_dataset
-from src.model import build_model
-from src.config import MODEL_DIR
-import os
-import tensorflow as tf
+# Training script
 
-def train_model(csv_path=None, epochs=30, batch_size=32):
-    (X_train, y_train), (X_val, y_val), (X_test, y_test) = load_dataset(csv_path)
+from src.data_loader import load_data
+from src.model import create_model
+from src.config import MODEL_PATH
+from src.train_utils import plot_history
 
-    model = build_model(X_train.shape[1])
+def train():
+    X_train, X_test, y_train, y_test = load_data()
 
-    callbacks = [
-        tf.keras.callbacks.ModelCheckpoint(
-            os.path.join(MODEL_DIR, "model.h5"),
-            monitor="val_auc",
-            save_best_only=True,
-            mode="max"
-        ),
-        tf.keras.callbacks.EarlyStopping(
-            monitor="val_auc", patience=5, mode="max", restore_best_weights=True
-        )
-    ]
+    model = create_model(input_dim=X_train.shape[1])
 
     history = model.fit(
         X_train, y_train,
-        validation_data=(X_val, y_val),
-        epochs=epochs,
-        batch_size=batch_size,
-        class_weight={0:1, 1:2}  # handle imbalance
+        validation_split=0.1,
+        epochs=10,
+        verbose=1
     )
 
-    print("Test evaluation:", model.evaluate(X_test, y_test))
-    return model, history
+    plot_history(history)
+
+    loss, accuracy = model.evaluate(X_test, y_test)
+    print(f" Test Accuracy: {accuracy*100:.2f}%")
+
+    model.save(MODEL_PATH)
+    print(f" Model saved at {MODEL_PATH}")
 
 if __name__ == "__main__":
-    train_model()
+    train()

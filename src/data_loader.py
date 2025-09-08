@@ -1,38 +1,30 @@
-import numpy as np
+# Data loading and preprocessing
+
 import pandas as pd
+from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-import joblib
-from sklearn.datasets import load_breast_cancer
-import os
-from src.config import MODEL_DIR
+import pickle
+from .config import SCALER_PATH
 
-def load_dataset(csv_path=None, test_size=0.2, val_size=0.1, random_state=42):
-    if csv_path:
-        df = pd.read_csv(csv_path)
-        X = df.drop(columns=["label"]).values
-        y = df["label"].values
-    else:
-        dataset = load_breast_cancer()
-        X = dataset.data
-        y = dataset.target
-    
-    # Split into train/val/test
-    X_train, X_tmp, y_train, y_tmp = train_test_split(
-        X, y, test_size=(test_size+val_size), stratify=y, random_state=random_state
-    )
-    rel_val = val_size / (test_size+val_size)
-    X_val, X_test, y_val, y_test = train_test_split(
-        X_tmp, y_tmp, test_size=rel_val, stratify=y_tmp, random_state=random_state
+def load_data():
+    # Load sklearn dataset
+    data = load_breast_cancer()
+    X = pd.DataFrame(data.data, columns=data.feature_names)
+    y = pd.Series(data.target)
+
+    # Train-test split
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=2, stratify=y
     )
 
-    # Scaling
+    # Standardize
     scaler = StandardScaler()
-    X_train = scaler.fit_transform(X_train)
-    X_val = scaler.transform(X_val)
-    X_test = scaler.transform(X_test)
+    X_train_std = scaler.fit_transform(X_train)
+    X_test_std = scaler.transform(X_test)
 
-    # Save scaler for inference
-    joblib.dump(scaler, os.path.join(MODEL_DIR, "scaler.pkl"))
+    # Save scaler
+    with open(SCALER_PATH, "wb") as f:
+        pickle.dump(scaler, f)
 
-    return (X_train, y_train), (X_val, y_val), (X_test, y_test)
+    return X_train_std, X_test_std, y_train, y_test

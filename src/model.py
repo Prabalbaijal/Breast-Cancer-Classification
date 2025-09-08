@@ -1,18 +1,15 @@
-import tensorflow as tf
-from tensorflow.keras import layers, models
+# Neural network architecture (exactly notebook wali)
 
-def build_model(input_dim, dropout=0.3):
-    inputs = tf.keras.Input(shape=(input_dim,))
-    x = layers.Dense(128, activation="relu")(inputs)
-    x = layers.Dropout(dropout)(x)
-    x = layers.Dense(64, activation="relu")(x)
-    x = layers.Dropout(dropout)(x)
-    outputs = layers.Dense(1, activation="sigmoid")(x)
+from tensorflow import keras
 
-    model = models.Model(inputs, outputs)
-    model.compile(
-        optimizer="adam",
-        loss="binary_crossentropy",
-        metrics=["accuracy", tf.keras.metrics.AUC(name="auc")]
-    )
+def create_model(input_dim=30):
+    model = keras.Sequential([
+        keras.layers.Flatten(input_shape=(input_dim,)),
+        keras.layers.Dense(20, activation='relu'),
+        keras.layers.Dense(2, activation='sigmoid')
+    ])
+
+    model.compile(optimizer='adam',
+                  loss='sparse_categorical_crossentropy',
+                  metrics=['accuracy'])
     return model
