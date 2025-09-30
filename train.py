@@ -8,13 +8,12 @@ from src.train_utils import plot_history
 def train():
     X_train, X_test, y_train, y_test = load_data()
 
-    model = create_model(input_dim=X_train.shape[1])
+    model = create_model(input_dim=30)
 
     history = model.fit(
         X_train, y_train,
         validation_split=0.1,
-        epochs=10,
-        verbose=1
+        epochs=10   
     )
 
     plot_history(history)

@@ -1,5 +1,3 @@
-# EDA (Exploratory Data Analysis)
-
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
